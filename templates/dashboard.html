@@ -1,8 +1,7 @@
 {% extends "base.html" %}
-
 {% block content %}
 
-<h2>Cyber Dashboard</h2>
+<h2>Dashboard</h2>
 
 <div class="card">
 <h3>Connections</h3>
@@ -13,17 +12,5 @@
 <h3>Alerts</h3>
 <ul id="alerts"></ul>
 </div>
-
-<div class="card">
-<h3>Traffic Graph</h3>
-<canvas id="trafficChart"></canvas>
-</div>
-
-<div class="card">
-<h3>Terminal</h3>
-<pre id="terminal"></pre>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 {% endblock %}
