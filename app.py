@@ -1,19 +1,12 @@
-from flask import Flask, render_template, request, redirect, jsonify, send_file
+from flask import Flask, render_template, request, redirect, url_for, jsonify, send_file
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
-import threading
-
-from modules.auth import User
-from modules.db import init_db, add_user, verify_user
+from modules.auth import get_user
 from modules.monitor import get_network_data
 from modules.detector import detect_threats
 from modules.ai_helper import explain_alert
 
-# Optional sniffer
-try:
-    from modules.sniffer import start_sniffing
-    threading.Thread(target=start_sniffing, daemon=True).start()
-except:
-    print("Sniffer not started")
+from reportlab.platypus import SimpleDocTemplate, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
@@ -21,42 +14,42 @@ app.secret_key = "supersecretkey"
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-init_db()
-add_user("admin", "admin123", "admin")
-add_user("user", "user123", "user")
-
-traffic_log = []
-
+# 🔐 FIXED USER LOADER
 @login_manager.user_loader
 def load_user(user_id):
-    return User(user_id, "user")
+    return get_user(user_id)
 
+# 🔐 LOGIN
 @app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        user = verify_user(request.form["username"], request.form["password"])
-        if user:
-            login_user(User(user["username"], user["role"]))
-            return redirect("/dashboard")
+        user = get_user(request.form["username"])
+        if user and user.password == request.form["password"]:
+            login_user(user)
+            return redirect(url_for("dashboard"))
     return render_template("login.html")
 
+# 📊 DASHBOARD
 @app.route("/dashboard")
 @login_required
 def dashboard():
     return render_template("dashboard.html", role=current_user.role)
 
+# 🚨 ALERTS PAGE
+@app.route("/alerts")
+@login_required
+def alerts():
+    return render_template("alerts.html", role=current_user.role)
+
+# 👑 ADMIN PAGE
 @app.route("/admin")
 @login_required
 def admin():
     if current_user.role != "admin":
         return "Access Denied"
-    return render_template("admin.html")
+    return render_template("admin.html", role=current_user.role)
 
-@app.route("/alerts")
-@login_required
-def alerts():
-    return render_template("alerts.html")
-
+# 🔁 REAL-TIME DATA
 @app.route("/api/data")
 @login_required
 def api_data():
@@ -64,23 +57,31 @@ def api_data():
     alerts = detect_threats(data)
     return jsonify({"connections": data, "alerts": alerts})
 
-@app.route("/api/traffic")
-@login_required
-def traffic():
-    data = get_network_data()
-    count = len(data)
-    traffic_log.append(count)
-
-    if len(traffic_log) > 20:
-        traffic_log.pop(0)
-
-    return jsonify(traffic_log)
-
+# 🤖 AI EXPLAIN
 @app.route("/explain", methods=["POST"])
 @login_required
 def explain():
     return explain_alert(request.form["alert"])
 
+# 📄 PDF REPORT
+@app.route("/download_report")
+@login_required
+def download_report():
+    doc = SimpleDocTemplate("report.pdf")
+    styles = getSampleStyleSheet()
+
+    data = get_network_data()
+    alerts = detect_threats(data)
+
+    content = [Paragraph("Cyber Security Report", styles['Title'])]
+
+    for a in alerts:
+        content.append(Paragraph(a, styles['Normal']))
+
+    doc.build(content)
+    return send_file("report.pdf", as_attachment=True)
+
+# 🔓 LOGOUT
 @app.route("/logout")
 @login_required
 def logout():
