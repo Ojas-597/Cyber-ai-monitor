@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cyber Monitor</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="sidebar" id="sidebar">
+    <h2>🔐 Cyber AI</h2>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/alerts">Alerts</a>
+    <a href="/admin">Admin</a>
+    <a href="/logout">Logout</a>
+</div>
+
+<div class="main">
+    <button onclick="toggleSidebar()">☰</button>
+    {% block content %}{% endblock %}
+</div>
+
+<script src="/static/script.js"></script>
+
+</body>
+</html>
