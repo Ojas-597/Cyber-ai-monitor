@@ -10,17 +10,17 @@ def explain_alert(alert):
             messages=[
                 {"role": "system", "content": "You are a cybersecurity expert."},
                 {"role": "user", "content": f"""
-Explain this alert:
+Explain this alert clearly:
 {alert}
 
 Include:
-1. Meaning
-2. Risk level
-3. Fix
-4. Prevention
+- Meaning
+- Risk level
+- Fix
+- Prevention
 """}
             ]
         )
         return res.choices[0].message["content"]
     except:
-        return "AI service unavailable"
+        return "AI explanation unavailable"
