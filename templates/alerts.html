@@ -1,7 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2>Alerts</h2>
+<h2>🚨 Alerts Dashboard</h2>
+
+<select id="filter" onchange="filterAlerts()">
+    <option value="ALL">All</option>
+    <option value="HIGH">High</option>
+    <option value="MEDIUM">Medium</option>
+    <option value="LOW">Low</option>
+</select>
+
 <ul id="alerts"></ul>
 
 {% endblock %}
