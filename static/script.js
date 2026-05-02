@@ -1,15 +1,23 @@
 let allAlerts = [];
 
-// Sidebar toggle
+// 🎯 Sidebar toggle
 function toggleSidebar() {
     let sidebar = document.getElementById("sidebar");
     let main = document.getElementById("main");
 
-    sidebar.classList.toggle("active");
-    main.classList.toggle("active");
+    if (sidebar && main) {
+        sidebar.classList.toggle("active");
+        main.classList.toggle("active");
+    }
 }
 
-// Fetch data
+// 🔊 Play alert sound
+function playSound() {
+    let audio = new Audio('/static/alert.mp3');
+    audio.play().catch(() => {});
+}
+
+// 🔁 Fetch data
 function fetchData() {
     fetch('/api/data')
     .then(res => res.json())
@@ -17,8 +25,9 @@ function fetchData() {
 
         let conn = document.getElementById("connections");
         let alerts = document.getElementById("alerts");
+        let logs = document.getElementById("logs");
 
-        // Connections
+        // 📡 Connections
         if (conn) {
             conn.innerHTML = "";
             data.connections.forEach(c => {
@@ -26,15 +35,32 @@ function fetchData() {
             });
         }
 
-        // Alerts
+        // 🚨 Alerts
         if (alerts) {
             allAlerts = data.alerts;
             renderAlerts(allAlerts);
         }
+
+        // 📊 Logs (Admin Panel)
+        if (logs) {
+            logs.innerHTML = "";
+            data.alerts.forEach(a => {
+                logs.innerHTML += `<li>[${a.severity}] ${a.message}</li>`;
+            });
+        }
+
+        // 🔊 Sound if high alert
+        if (data.alerts.some(a => a.severity === "HIGH")) {
+            playSound();
+        }
+
+    })
+    .catch(err => {
+        console.error("Error fetching data:", err);
     });
 }
 
-// Render alerts
+// 🎨 Render alerts
 function renderAlerts(alertList) {
     let alerts = document.getElementById("alerts");
     if (!alerts) return;
@@ -45,20 +71,25 @@ function renderAlerts(alertList) {
         let color = "white";
 
         if (a.severity === "HIGH") color = "red";
-        if (a.severity === "MEDIUM") color = "orange";
-        if (a.severity === "LOW") color = "yellow";
+        else if (a.severity === "MEDIUM") color = "orange";
+        else if (a.severity === "LOW") color = "yellow";
 
         alerts.innerHTML += `
         <li style="color:${color}">
             [${a.severity}] ${a.message}
-            <button onclick="explain('${a.message}')">Explain</button>
+            <button onclick="explainAlert('${a.message.replace(/'/g, "\\'")}')">
+                🤖 Explain
+            </button>
         </li>`;
     });
 }
 
-// Filter alerts
+// 🔍 Filter alerts
 function filterAlerts() {
-    let value = document.getElementById("filter").value;
+    let filter = document.getElementById("filter");
+    if (!filter) return;
+
+    let value = filter.value;
 
     if (value === "ALL") {
         renderAlerts(allAlerts);
@@ -68,20 +99,26 @@ function filterAlerts() {
     }
 }
 
-// AI explain
-function explain(alert) {
+// 🤖 AI explain
+function explainAlert(alertText) {
     fetch('/explain', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: 'alert=' + encodeURIComponent(alert)
+        body: 'alert=' + encodeURIComponent(alertText)
     })
     .then(res => res.text())
     .then(data => {
         alert(data);
+    })
+    .catch(() => {
+        alert("AI explanation unavailable");
     });
 }
 
-// Auto refresh
+// ▶ Initial load
+fetchData();
+
+// 🔁 Auto refresh every 3 sec
 setInterval(fetchData, 3000);
