@@ -1,13 +1,33 @@
-blacklist = ["192.168.1.100", "10.0.0.5"]
+from modules.vt_api import check_ip
+
+blacklist = ["192.168.1.100"]
 
 def detect_threats(data):
     alerts = []
 
     for entry in data:
-        if entry["ip"] in blacklist:
-            alerts.append(f"Blacklisted IP detected: {entry['ip']}")
+        ip = entry["ip"]
 
+        if ip == "N/A":
+            continue
+
+        # 🔴 Blacklist
+        if ip in blacklist:
+            alerts.append({
+                "message": f"Blacklisted IP: {ip}",
+                "severity": "HIGH"
+            })
+
+        # 🌍 VirusTotal
+        vt = check_ip(ip)
+        if vt:
+            alerts.append(vt)
+
+        # 🔐 SSH detection
         if entry["port"] == 22:
-            alerts.append("Possible SSH attack")
+            alerts.append({
+                "message": "Possible SSH attack",
+                "severity": "MEDIUM"
+            })
 
     return alerts
