@@ -1,2 +1,2 @@
 SECRET_KEY = "supersecretkey"
-OPENAI_API_KEY = "YOUR_API_KEY"
+OPENAI_API_KEY = "your-openai-key"
