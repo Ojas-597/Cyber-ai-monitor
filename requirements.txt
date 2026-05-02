@@ -1,0 +1,7 @@
+flask
+flask-login
+psutil
+openai
+reportlab
+scapy
+flask-bcrypt
