@@ -7,19 +7,22 @@
 <body>
 
 <div class="sidebar" id="sidebar">
-    <h2>🔐 Cyber AI</h2>
+    <h2>🔐</h2>
     <a href="/dashboard">Dashboard</a>
     <a href="/alerts">Alerts</a>
+
+    {% if role == "admin" %}
     <a href="/admin">Admin</a>
+    {% endif %}
+
     <a href="/logout">Logout</a>
 </div>
 
-<div class="main">
+<div class="main" id="main">
     <button onclick="toggleSidebar()">☰</button>
     {% block content %}{% endblock %}
 </div>
 
 <script src="/static/script.js"></script>
-
 </body>
 </html>
